@@ -167,6 +167,9 @@ account limits can change; check its current account page and terms. The
 firmware provides three configurable voice slots named Muse, Ethan, and Sarah.
 Slot 1 defaults to [this Fish Audio voice](https://fish.audio/app/m/1df12c4bb692423283fde2bdc7f84093);
 slots 2 and 3 use the Ethan and Sarah IDs configured for this project.
+You can switch voices directly on the device: open **Settings → Voice Replies**
+and tap the voice you want. The choice is saved on the device and applies to
+future replies.
 
 To set voice names and model IDs, run this from `esp32/`:
 
@@ -208,11 +211,33 @@ and does not translate replies.
 | What you see | What to try |
 |---|---|
 | `idf.py: command not found` | In that terminal, run `. ~/esp/esp-idf-v6/export.sh`. |
-| The build reports a different Python environment or ESP-IDF version | Use the same v6.0.1 `export.sh` in the terminal where you configured and built this `B` directory. Do not mix ESP-IDF installations. |
+| The build reports a different Python environment or ESP-IDF version | Follow the Python environment recovery steps below, using the same environment that configured this build directory. |
 | No serial port is detected | Check that the cable supports data, reconnect the board, and close apps that may have opened its port. List macOS ports with `ls /dev/cu.usb*`; Linux ports are commonly under `/dev/ttyACM*` or `/dev/ttyUSB*`. Pass the correct port to the flash command. |
 | Replies show as text but there is no speech | Open **Settings → Voice Replies** and confirm the Fish key is saved. Check that the device is awake, online, and able to reach Fish Audio; account limits or API errors can also prevent speech. Without a key, captions still work. |
 | Hey Muse does not respond after pressing the physical sleep button | Confirm the device is in screen sleep, not powered off by holding the button. Make sure the 1.75C boot log says Hey Muse is enabled and try again near the microphone. |
 | The device does not connect to Muse | Confirm pairing in the Muse app, verify the Wi-Fi network and password in the setup flow, and check the serial log for the first connection error. |
+
+### Python environment mismatch
+
+ESP-IDF records the Python environment used to configure a build directory.
+If it reports that Python 3.14 is active while this project was configured
+with Python 3.12, activate the existing Python 3.12 environment before using
+that build directory. From the same terminal, run:
+
+```sh
+cd ~/esp/esp-idf-v6
+export IDF_PYTHON_ENV_PATH="$HOME/.espressif/python_env/idf6.0_py3.12_env"
+. ./export.sh
+python --version
+```
+
+Confirm the output is Python 3.12, then return to the repository's `esp32/`
+directory and rerun the menuconfig command from step 3. `IDF_PYTHON_ENV_PATH`
+tells ESP-IDF to use that existing virtual environment. You do not need
+`idf.py fullclean` when using the Python version already recorded by the build.
+If you intentionally change Python versions instead, run `idf.py fullclean`
+for that build directory under the newly activated environment before
+configuring it again.
 
 To view the serial log, activate ESP-IDF, go to `esp32/`, and run
 `idf.py -B build-muse-waveshare-s3-175c -p PORT monitor`. Replace `PORT` with

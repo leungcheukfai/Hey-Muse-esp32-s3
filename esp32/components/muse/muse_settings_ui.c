@@ -99,6 +99,14 @@ static lv_obj_t *s_ble_sw, *s_ble_status;
 
 /* Spoken reply page. */
 static lv_obj_t *s_speech_tts_status;
+static lv_obj_t *s_speech_voice_values[3];
+static const char *const s_fish_voice_names[] = {
+    CONFIG_MUSE_FISH_VOICE_1_NAME, CONFIG_MUSE_FISH_VOICE_2_NAME, CONFIG_MUSE_FISH_VOICE_3_NAME,
+};
+static const char *const s_fish_voice_ids[] = {
+    CONFIG_MUSE_FISH_VOICE_1_ID, CONFIG_MUSE_FISH_VOICE_2_ID, CONFIG_MUSE_FISH_VOICE_3_ID,
+};
+static void tick_speech(void);
 
 /* Sound page. */
 static lv_obj_t *s_spk_sw, *s_vol_val, *s_vol_sl, *s_gain_val, *s_gain_sl, *s_bright_val, *s_bright_sl, *s_mic_bar, *s_mic_val;
@@ -1228,6 +1236,14 @@ static void on_power_off(lv_event_t *e)
     muse_input_request_power_off();
 }
 
+static void on_speech_voice(lv_event_t *e)
+{
+    const char *voice_id = lv_event_get_user_data(e);
+    if (voice_id && muse_settings_set_fish_voice_id(voice_id) == ESP_OK) {
+        tick_speech();
+    }
+}
+
 static void build_power_page(lv_obj_t *tile)
 {
     lv_obj_t *list;
@@ -1248,6 +1264,14 @@ static void build_speech_page(lv_obj_t *tile)
     note(list, "Muse replies and speech are in English.");
     s_speech_tts_status = note(list, "");
     note(list, "Spoken replies use Fish Audio S2.1 Pro Free.");
+    note(list, "Tap a voice to use it for future spoken replies.");
+    for (size_t i = 0; i < 3; i++) {
+        s_speech_voice_values[i] = NULL;
+        if (s_fish_voice_ids[i][0]) {
+            row(list, LV_SYMBOL_VOLUME_MAX, s_fish_voice_names[i], &s_speech_voice_values[i],
+                on_speech_voice, (void *)s_fish_voice_ids[i]);
+        }
+    }
     note(list, "Enter its API key in Phone Setup, use save_fish_api_key.py over USB, or set it in menuconfig for a private build.");
     note(list, "Fish receives reply text only; the microphone audio stays with Muse.");
     note(list, "With no API key, Muse shows replies as captions without speech.");
@@ -1258,6 +1282,13 @@ static void tick_speech(void)
     set_text(s_speech_tts_status, muse_settings_fish_api_key_len()
                                       ? "Fish Audio API key saved"
                                       : "No Fish Audio API key saved");
+    char selected[MUSE_FISH_VOICE_ID_MAX + 1];
+    muse_settings_fish_voice_id(selected);
+    for (size_t i = 0; i < 3; i++) {
+        if (s_speech_voice_values[i]) {
+            set_text(s_speech_voice_values[i], !strcmp(selected, s_fish_voice_ids[i]) ? "Selected" : "");
+        }
+    }
 }
 
 /* ---------- Home ---------- */

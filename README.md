@@ -31,6 +31,9 @@ For a start-to-finish guide to installing ESP-IDF, building and flashing the
 1.75C, pairing with Muse, saving a Fish Audio key, and testing voice replies,
 see the [setup guide](docs/SETUP.md).
 
+Choose between the configured Muse, Ethan, and Sarah Fish Audio voices on the
+device under **Settings → Voice Replies**.
+
 ## Status
 
 Wake-word detection and hands-free recording are experimental. The firmware
