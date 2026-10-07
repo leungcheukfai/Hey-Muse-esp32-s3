@@ -36,7 +36,8 @@ constexpr char TAG[] = "muse_wake";
 constexpr size_t FEATURE_COUNT = 40;
 constexpr size_t FEATURE_DURATION_MS = 30;
 constexpr size_t FEATURE_STEP_MS = 10;
-constexpr size_t TENSOR_ARENA_SIZE = 30000;
+/* The upstream 30 KB arena leaves too little planner workspace on this board. */
+constexpr size_t TENSOR_ARENA_SIZE = 64 * 1024;
 constexpr size_t VARIABLE_ARENA_SIZE = 1024;
 constexpr size_t PROBABILITY_WINDOW = 6;
 constexpr size_t WARMUP_WINDOWS = 100;

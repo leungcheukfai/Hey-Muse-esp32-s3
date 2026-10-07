@@ -4,8 +4,12 @@
 [`wobsoriano/hey-muse`](https://github.com/wobsoriano/hey-muse), copied without
 modification from `tools/wake/hey_muse.tflite`. The adjacent JSON file is its
 upstream manifest. The model uses a 16 kHz mono stream, 10 ms feature steps,
-40 frontend features, a six-output probability window, a 0.99 cutoff, and a
-30,000-byte tensor arena.
+40 frontend features, a six-output probability window, and a 0.99 cutoff.
+
+The upstream manifest recommends a 30,000-byte arena. With the pinned
+Espressif TFLite Micro component, that leaves too little planner workspace on
+the 1.75C (the planner stops at 29 buffers). The firmware uses a 64 KiB arena
+in PSRAM; the upstream model and manifest remain unchanged.
 
 The upstream repository is MIT licensed; see [HEY-MUSE-LICENSE](HEY-MUSE-LICENSE).
 The firmware uses Espressif's TFLite Micro component and ESPHome's Apache-2.0
