@@ -86,6 +86,20 @@ microphone and detector active and uses more battery than button-only sleep. See
 
    ```sh
    tools/muse/board.sh build s3
+   ```
+
+   The build helper sends its detailed output to `/tmp/muse_build_s3.log`, so
+   the terminal can appear idle while it compiles. To watch progress, open a
+   second terminal and run:
+
+   ```sh
+   tail -f /tmp/muse_build_s3.log
+   ```
+
+   Wait for the build command to finish successfully before flashing. Then run
+   this in the project terminal:
+
+   ```sh
    tools/muse/board.sh flash s3
    ```
 
