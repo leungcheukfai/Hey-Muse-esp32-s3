@@ -163,7 +163,9 @@ On the device, open **Settings → Voice Replies** and confirm that the status
 says **Fish Audio API key saved**. For spoken replies, the device sends Muse's
 reply text to Fish Audio over HTTPS. Microphone audio continues to go to Muse;
 it is not sent to Fish Audio. Fish Audio's model availability, free usage, and
-account limits can change; check its current account page and terms.
+account limits can change; check its current account page and terms. The
+firmware uses [this Fish Audio voice](https://fish.audio/app/m/1df12c4bb692423283fde2bdc7f84093)
+by default.
 
 ## 7. Try Hey Muse
 

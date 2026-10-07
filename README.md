@@ -75,7 +75,8 @@ build configuration and have each user build with their own token.
 
 All spoken replies use Fish Audio's S2.1 Pro Free TTS API. Muse's reply text is
 sent to Fish over HTTPS; microphone audio is not sent to Fish. The API key is
-saved on the device after flashing and is not compiled into the firmware.
+saved on the device after flashing and is not compiled into the firmware. The
+default voice is [this Fish Audio voice](https://fish.audio/app/m/1df12c4bb692423283fde2bdc7f84093).
 
 Create a Fish Audio API key at <https://fish.audio/app/api-keys>. With the
 1.75C connected by USB, run this from `esp32/` in an ESP-IDF terminal:

@@ -32,6 +32,7 @@ static const char *TAG = "muse_fish_tts";
 
 #define FISH_TTS_URL "https://api.fish.audio/v1/tts"
 #define FISH_TTS_MODEL "s2.1-pro-free"
+#define FISH_TTS_REFERENCE_ID "1df12c4bb692423283fde2bdc7f84093"
 #define FISH_TTS_RATE 16000
 #define FISH_AUDIO_MAX (8 * 1024 * 1024)
 #define PCM_BATCH_FRAMES 1024
@@ -88,6 +89,7 @@ static char *request_json(const char *text)
 {
     cJSON *root = cJSON_CreateObject();
     if (!root || !cJSON_AddStringToObject(root, "text", text) ||
+        !cJSON_AddStringToObject(root, "reference_id", FISH_TTS_REFERENCE_ID) ||
         !cJSON_AddStringToObject(root, "format", "pcm") ||
         !cJSON_AddNumberToObject(root, "sample_rate", FISH_TTS_RATE)) {
         cJSON_Delete(root);
