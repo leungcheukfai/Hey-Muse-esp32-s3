@@ -179,10 +179,11 @@ With the device awake and connected to Wi-Fi:
 4. The reply appears on the display and is spoken through Fish Audio when the
    API key is saved and the service is available.
 
-Wake listening uses the board's audio hardware. When battery sleep turns that
-hardware off, wake-word detection is suspended; press the board's physical
-button to wake it. For hands-free use, keep the board awake or powered by USB.
-This firmware is English-first and does not translate replies.
+On the 1.75C, wake listening stays active while the screen is asleep, including
+on battery. The microphone and detector stay powered, so battery life is lower
+than button-only sleep. A long hold on the physical power button turns the
+board fully off; use a button to turn it back on. This firmware is English-first
+and does not translate replies.
 
 ## Troubleshooting
 
@@ -192,7 +193,7 @@ This firmware is English-first and does not translate replies.
 | The build reports a different Python environment or ESP-IDF version | Use the same v6.0.1 `export.sh` in the terminal where you configured and built this `B` directory. Do not mix ESP-IDF installations. |
 | No serial port is detected | Check that the cable supports data, reconnect the board, and close apps that may have opened its port. List macOS ports with `ls /dev/cu.usb*`; Linux ports are commonly under `/dev/ttyACM*` or `/dev/ttyUSB*`. Pass the correct port to the flash command. |
 | Replies show as text but there is no speech | Open **Settings → Voice Replies** and confirm the Fish key is saved. Check that the device is awake, online, and able to reach Fish Audio; account limits or API errors can also prevent speech. Without a key, captions still work. |
-| Hey Muse does not respond after pressing the physical sleep button | Press the physical button to wake the device first. Wake-word listening is suspended while battery sleep has powered down the audio hardware. |
+| Hey Muse does not respond after pressing the physical sleep button | Confirm the device is in screen sleep, not powered off by holding the button. Make sure the 1.75C boot log says Hey Muse is enabled and try again near the microphone. |
 | The device does not connect to Muse | Confirm pairing in the Muse app, verify the Wi-Fi network and password in the setup flow, and check the serial log for the first connection error. |
 
 To view the serial log, activate ESP-IDF, go to `esp32/`, and run

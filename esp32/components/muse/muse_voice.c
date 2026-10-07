@@ -857,7 +857,14 @@ static void voice_task(void *arg)
             muse_input_event_t ev;
             bool asleep = muse_state_asleep();
             bool battery = muse_state_on_battery();
-            bool rest = asleep && battery && !s_chirp && !s_mp3test && !s_loopback;
+            bool wake_listening = false;
+#if CONFIG_MUSE_BOARD_WAVESHARE_S3_175C
+            wake_listening = muse_wake_enabled();
+#endif
+            /* Screen sleep keeps Hey Muse's mic and detector running on battery.
+             * If the model is unavailable, preserve the deeper button-wake rest. */
+            bool rest = asleep && battery && !wake_listening
+                        && !s_chirp && !s_mp3test && !s_loopback;
 #if HOLD_NOTES
             /* A press goes first: send_held() leaves it queued and returns
              * without backing off, so retrying before it's read would spin. */

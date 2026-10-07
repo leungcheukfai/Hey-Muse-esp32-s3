@@ -72,9 +72,11 @@ session to Muse. The rest depends on the hardware.
 | Buttons | BOOT | BOOT | BOOT | BOOT | Top | Green | Green | Centre (talk), dial | XIAO BOOT (talk/setup) | PWR (talk), BOOT | BOOT (talk), PWR | Two | BOOT (talk), PWR | Wheel (press to talk, turn to sleep) | Front (talk), side (menu), PWR | Front (talk), side (menu), PWR | GO/Space (talk), Esc/Enter/arrows (menu) | BOOT/CONFIG (talk) | Yellow (talk), blue (sleep), PWR | PWR (talk), RST | Touch BtnB (talk), PWR | BOOT (talk) | BOOT | BOOT (talk) | BOOT (flash only) |
 
 On the Waveshare ESP32-S3-Touch-AMOLED-1.75C, local “Hey Muse” detection
-starts the existing voice turn; push-to-talk remains available. It listens
-while awake or on USB power, and stops listening when battery sleep powers the
-codecs down. Detection quality on this board is experimental and needs testing
+starts the existing voice turn; push-to-talk remains available. It continues to
+listen while the screen is asleep, including on battery, so saying “Hey Muse”
+wakes the screen and starts a hands-free recording. The microphone and wake
+detector stay active during screen sleep, which uses more battery than button-
+only sleep. Detection quality on this board is experimental and needs testing
 with the intended room and microphone gain.
 
 Boards without PSRAM (the ideaspark, the C6 boards and the Cardputer ADV) don't have room for

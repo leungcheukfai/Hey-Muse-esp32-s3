@@ -35,9 +35,9 @@ see the [setup guide](docs/SETUP.md).
 
 Wake-word detection and hands-free recording are experimental. The firmware
 has been built and flashed on 1.75C hardware during development; the voice flow
-still needs broader real-world testing. Listening is intended to operate while
-the device is awake or on USB power and to stop when battery sleep powers the
-audio hardware down. See
+still needs broader real-world testing. On the 1.75C, “Hey Muse” remains
+available while the screen is asleep, including on battery. This keeps the
+microphone and detector active and uses more battery than button-only sleep. See
 [`esp32/devices/README.md`](esp32/devices/README.md) for board notes.
 
 ## Build and flash

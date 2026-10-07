@@ -73,9 +73,9 @@ void muse_state_page(bool cjk, int *cols, int *lines);
 
 void muse_state_set_power(const muse_power_t *power);
 muse_power_t muse_state_power(void);
-/* A battery and no USB power (charger or computer). Power saving asleep (the
- * voice task resting, the display paused, the Wi-Fi nap) is only for then;
- * a change nudges (muse_state_wait_awake). */
+/* A battery and no USB power (charger or computer). Battery power saving is
+ * only for then; a change nudges (muse_state_wait_awake). Hey Muse may keep
+ * audio and the CPU active while the screen is asleep so it can wake by voice. */
 bool muse_state_on_battery(void);
 /* Bench tests over USB (">nap"): count as on battery until turned off. */
 void muse_state_set_as_if_battery(bool on);

@@ -1092,7 +1092,7 @@ static void build_sleep_page(lv_obj_t *tile)
         lv_obj_set_style_text_color(s_sleep_checks[i], lv_color_hex(COLOR_ACCENT), 0);
     }
     button(list, LV_SYMBOL_EYE_CLOSE "  Sleep now", COLOR_ACCENT, on_sleep_now, NULL);
-    note(list, "Tap the screen or press either button to wake.");
+    note(list, "Say Hey Muse or press a button to wake. Wake listening uses more battery.");
 }
 
 static const char *sleep_name(int secs)

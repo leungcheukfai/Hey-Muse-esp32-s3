@@ -328,9 +328,11 @@ static void set_cpu_low(bool low)
 }
 
 /*
- * On battery with the screen dark and voice resting: stop the display and let
- * the CPU drop to the crystal clock and light-sleep between polls, or until a
- * button interrupts (wait_buttons). Returns true while the display is stopped.
+ * On battery with the screen dark: stop the display. If voice is resting,
+ * also let the CPU drop to the crystal clock and light-sleep between polls, or
+ * until a button interrupts (wait_buttons). Hey Muse keeps the mic active, so
+ * its detector needs the CPU running while the display is paused. Returns true
+ * while the display is stopped.
  * With a USB host attached (">nap" on the bench) the CPU stays at full speed:
  * at the crystal clock a long line of serial output can stall the USB console
  * until the host reopens the port.
@@ -339,8 +341,8 @@ static bool update_power(void)
 {
     static bool paused;
     bool pause = muse_board->display_pause && muse_state_on_battery() && muse_state_asleep()
-                 && muse_ui_dark() && muse_voice_resting();
-    bool want_low = pause && !muse_console_host();
+                 && muse_ui_dark();
+    bool want_low = pause && muse_voice_resting() && !muse_console_host();
     if (pause == paused && want_low == s_cpu_low) {
         return paused;
     }

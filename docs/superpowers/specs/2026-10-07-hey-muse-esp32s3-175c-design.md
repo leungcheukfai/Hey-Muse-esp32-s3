@@ -24,7 +24,7 @@ Choose option 1. Keep the wake-word component isolated so its runtime can be cha
 - Feed the existing microphone frames to the detector from the voice task; do not open a second audio capture path.
 - On detection, retain enough recent audio to carry the user’s first words into the request, then start the existing Muse voice turn automatically. After speech has been detected, end recording after 2 seconds of silence and submit the captured note to Muse. Keep the 30-second maximum as a safety cap.
 - Keep push-to-talk available as a manual fallback. Suspend detection during recording and reply playback, then reset the detector before listening again so the speaker does not trigger a new turn.
-- Listen while the device is awake or powered by USB. Preserve current battery sleep behavior: when the device sleeps on battery, power down the codecs and pause wake detection.
+- Keep Hey Muse listening while the screen is asleep, including on battery, so a wake phrase turns the screen on and begins recording. Keep the microphone and detector powered during screen sleep; explain the added battery use in the settings and setup guide. A full power-off still requires a physical button to turn the device back on.
 - If the detector or model fails to initialize, log the failure and leave push-to-talk working.
 - Show a concise idle hint that the device is listening for “Hey Muse” while detection is active.
 
@@ -36,7 +36,7 @@ The wake detector operates locally. Audio is sent to Muse only after a wake word
 
 ## Validation
 
-No automated tests or build are part of this design approval. Once implemented, review should include a firmware build and hardware checks on the 1.75C: wake-word detection, capture through the first words after the phrase, trailing-silence endpointing, reply playback without self-trigger, push-to-talk fallback, and codec shutdown during battery sleep. Detection reliability and false activations need real-room evaluation because the upstream model has not been validated on this board.
+Once implemented, review should include a firmware build and hardware checks on the 1.75C: wake-word detection while the screen is asleep on battery, screen wake, capture through the first words after the phrase, trailing-silence endpointing, reply playback without self-trigger, and push-to-talk fallback. Detection reliability and false activations need real-room evaluation because the upstream model has not been validated on this board.
 
 ## References
 
