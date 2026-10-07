@@ -232,9 +232,18 @@ python --version
 ```
 
 Confirm the output is Python 3.12, then return to the repository's `esp32/`
-directory and rerun the menuconfig command from step 3. `IDF_PYTHON_ENV_PATH`
-tells ESP-IDF to use that existing virtual environment. You do not need
-`idf.py fullclean` when using the Python version already recorded by the build.
+directory and rerun the menuconfig command from step 3. For this checkout:
+
+```sh
+cd ~/Developer/hey-muse-esp32-s3-clean-test/esp32
+```
+
+If your clone is elsewhere, change to that clone's `esp32/` directory.
+`idf.py -B` selects the build directory; it does not change the project
+directory, so do not run the project command from `~/esp/esp-idf-v6`.
+`IDF_PYTHON_ENV_PATH` tells ESP-IDF to use that existing virtual environment.
+You do not need `idf.py fullclean` when using the Python version already
+recorded by the build.
 If you intentionally change Python versions instead, run `idf.py fullclean`
 for that build directory under the newly activated environment before
 configuring it again.

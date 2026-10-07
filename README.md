@@ -47,6 +47,29 @@ microphone and detector active and uses more battery than button-only sleep. See
 
 1. Install and activate **ESP-IDF 6.0.1** with support for the `esp32s3` target.
    See the [Espressif ESP-IDF setup guide](https://docs.espressif.com/projects/esp-idf/en/release-v6.0/esp32s3/get-started/index.html).
+   In every new terminal, activate the same ESP-IDF Python environment used to
+   configure the build directory. This project uses Python 3.12.13. If another
+   Python version is active, run:
+
+   ```sh
+   cd ~/esp/esp-idf-v6
+   export IDF_PYTHON_ENV_PATH="$HOME/.espressif/python_env/idf6.0_py3.12_env"
+   . ./export.sh
+   python --version
+   ```
+
+   Confirm it reports Python 3.12, then change to this repository's `esp32/`
+   directory. For this checkout, run:
+
+   ```sh
+   cd ~/Developer/hey-muse-esp32-s3-clean-test/esp32
+   ```
+
+   If you cloned the repository somewhere else, `cd` to that clone's `esp32/`
+   directory instead. ESP-IDF activation adds `idf.py` to the current
+   terminal's PATH; it must be repeated when you open another terminal. If you
+   see an error that Python 3.14 is active but the build was configured with
+   Python 3.12, follow these steps instead of running `fullclean`.
 2. From `esp32/`, open the 1.75C configuration menu:
 
    ```sh
