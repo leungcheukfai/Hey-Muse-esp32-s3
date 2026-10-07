@@ -62,7 +62,7 @@ typedef void (*text_done_cb_t)(const char *text);
 static int s_text_scale = 466;
 static lv_obj_t *s_tile;
 static lv_obj_t *s_current;
-static lv_obj_t *s_home, *s_wifi, *s_hatch, *s_ble, *s_sound, *s_sleep, *s_battery, *s_power, *s_language, *s_text;
+static lv_obj_t *s_home, *s_wifi, *s_hatch, *s_ble, *s_sound, *s_sleep, *s_battery, *s_power, *s_speech, *s_text;
 
 /*
  * Only home is kept. A sub-page is built when it opens and deleted on the way
@@ -76,7 +76,7 @@ typedef struct {
 
 /* Home values. */
 static lv_obj_t *s_home_wifi, *s_home_hatch, *s_home_ble, *s_home_sound, *s_home_sleep, *s_home_battery,
-    *s_home_language, *s_about;
+    *s_home_speech, *s_about;
 
 /* Wi-Fi page. */
 static lv_obj_t *s_wifi_sw, *s_wifi_status, *s_wifi_saved, *s_wifi_scan_btn, *s_wifi_scan_lbl, *s_wifi_list;
@@ -97,8 +97,8 @@ static int64_t s_link_reset_armed_us;
 /* Bluetooth page. */
 static lv_obj_t *s_ble_sw, *s_ble_status;
 
-/* Spoken reply language page. */
-static lv_obj_t *s_language_cantonese, *s_language_mandarin, *s_language_gemini_status;
+/* Spoken reply page. */
+static lv_obj_t *s_speech_tts_status;
 
 /* Sound page. */
 static lv_obj_t *s_spk_sw, *s_vol_val, *s_vol_sl, *s_gain_val, *s_gain_sl, *s_bright_val, *s_bright_sl, *s_mic_bar, *s_mic_val;
@@ -366,7 +366,7 @@ static lv_obj_t *info_row(lv_obj_t *list, const char *text)
 static void drop(lv_obj_t *p)
 {
     lv_obj_t **const pages[] = { &s_wifi, &s_hatch, &s_ble, &s_sound, &s_sleep, &s_battery,
-                                 &s_power, &s_language, &s_text };
+                                 &s_power, &s_speech, &s_text };
     for (size_t i = 0; i < sizeof(pages) / sizeof(pages[0]); i++) {
         if (*pages[i] == p) {
             *pages[i] = NULL;
@@ -1241,40 +1241,23 @@ static void build_power_page(lv_obj_t *tile)
     note(list, text);
 }
 
-/* ---------- Reply language ---------- */
-
-static void on_language_cantonese(lv_event_t *e)
-{
-    (void)e;
-    muse_settings_set_reply_language(MUSE_REPLY_CANTONESE);
-}
-
-static void on_language_mandarin(lv_event_t *e)
-{
-    (void)e;
-    muse_settings_set_reply_language(MUSE_REPLY_MANDARIN);
-}
-
-static void build_language_page(lv_obj_t *tile)
+static void build_speech_page(lv_obj_t *tile)
 {
     lv_obj_t *list;
-    s_language = page(tile, "LANGUAGE & SPEECH", true, &list);
-    note(list, "Traditional Chinese captions stay on screen. Choose the language Muse speaks in.");
-    row(list, NULL, "Cantonese", &s_language_cantonese, on_language_cantonese, NULL);
-    row(list, NULL, "Mandarin", &s_language_mandarin, on_language_mandarin, NULL);
-    s_language_gemini_status = note(list, "");
-    note(list, "Enter your key in Phone setup on the phone page.");
-    note(list, "With no Gemini key, Muse shows replies as captions without speech.");
+    s_speech = page(tile, "VOICE REPLIES", true, &list);
+    note(list, "Muse replies and speech are in English.");
+    s_speech_tts_status = note(list, "");
+    note(list, "Spoken replies use Fish Audio S2.1 Pro Free.");
+    note(list, "Enter its API key in Phone Setup, or run save_fish_api_key.py over USB.");
+    note(list, "Fish receives reply text only; the microphone audio stays with Muse.");
+    note(list, "With no API key, Muse shows replies as captions without speech.");
 }
 
-static void tick_language(void)
+static void tick_speech(void)
 {
-    bool cantonese = muse_settings_reply_language() == MUSE_REPLY_CANTONESE;
-    set_text(s_language_cantonese, cantonese ? "Selected" : "");
-    set_text(s_language_mandarin, cantonese ? "" : "Selected");
-    set_text(s_language_gemini_status, muse_settings_gemini_key_len()
-                                              ? "Gemini TTS: key saved"
-                                              : "Gemini TTS: not set");
+    set_text(s_speech_tts_status, muse_settings_fish_api_key_len()
+                                      ? "Fish Audio API key saved"
+                                      : "No Fish Audio API key saved");
 }
 
 /* ---------- Home ---------- */
@@ -1286,7 +1269,7 @@ static const page_t SOUND = { &s_sound, build_sound_page };
 static const page_t SLEEP = { &s_sleep, build_sleep_page };
 static const page_t BATTERY = { &s_battery, build_battery_page };
 static const page_t POWER = { &s_power, build_power_page };
-static const page_t LANGUAGE = { &s_language, build_language_page };
+static const page_t SPEECH = { &s_speech, build_speech_page };
 
 static void build_home(lv_obj_t *tile)
 {
@@ -1298,7 +1281,7 @@ static void build_home(lv_obj_t *tile)
     row(list, LV_SYMBOL_VOLUME_MAX, "Sound", &s_home_sound, on_nav, (void *)&SOUND);
     row(list, LV_SYMBOL_EYE_CLOSE, "Sleep", &s_home_sleep, on_nav, (void *)&SLEEP);
     row(list, LV_SYMBOL_BATTERY_FULL, "Battery", &s_home_battery, on_nav, (void *)&BATTERY);
-    row(list, LV_SYMBOL_VOLUME_MAX, "Language & speech", &s_home_language, on_nav, (void *)&LANGUAGE);
+    row(list, LV_SYMBOL_VOLUME_MAX, "Voice replies", &s_home_speech, on_nav, (void *)&SPEECH);
     row(list, LV_SYMBOL_POWER, "Power off", NULL, on_nav, (void *)&POWER);
     s_about = note(list, "");
 }
@@ -1324,7 +1307,7 @@ static void tick_home(void)
         set_text(s_home_sound, "Muted");
     }
     set_text(s_home_sleep, sleep_name(muse_settings_sleep_s()));
-    set_text(s_home_language, muse_settings_reply_language() == MUSE_REPLY_CANTONESE ? "Cantonese" : "Mandarin");
+    set_text(s_home_speech, "English");
 
     muse_power_t p = muse_state_power();
     char buf[96];
@@ -1377,8 +1360,8 @@ void muse_settings_ui_tick(bool visible)
         tick_sleep();
     } else if (s_current == s_battery) {
         tick_battery();
-    } else if (s_current == s_language) {
-        tick_language();
+    } else if (s_current == s_speech) {
+        tick_speech();
     }
 }
 

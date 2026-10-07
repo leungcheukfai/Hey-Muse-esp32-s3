@@ -45,7 +45,8 @@ static struct {
     char vm[MUSE_VM_MAX + 1];
     char token[MUSE_TOKEN_MAX + 1];
     char gemini_key[MUSE_GEMINI_KEY_MAX + 1];
-    uint8_t reply_language;
+    char hf_token[MUSE_HF_TOKEN_MAX + 1];
+    char fish_api_key[MUSE_FISH_API_KEY_MAX + 1];
 } s = {
     .volume = CONFIG_MUSE_DEFAULT_VOLUME,
     .speaker_on = true,
@@ -135,8 +136,8 @@ esp_err_t muse_settings_init(void)
     load_str("vm", s.vm, sizeof(s.vm));
     load_str("token", s.token, sizeof(s.token));
     load_str("gemini_key", s.gemini_key, sizeof(s.gemini_key));
-    load_u8("reply_lang", &s.reply_language);
-
+    load_str("hf_token", s.hf_token, sizeof(s.hf_token));
+    load_str("fish_key", s.fish_api_key, sizeof(s.fish_api_key));
     s.volume = clampi(s.volume, 0, 100);
     s.mic_gain = clampi(s.mic_gain, 0, MUSE_MIC_GAIN_MAX);
     s.brightness = clampi(s.brightness, 10, 100);
@@ -207,9 +208,28 @@ size_t muse_settings_gemini_key_len(void)
     return n;
 }
 
-muse_reply_language_t muse_settings_reply_language(void)
+void muse_settings_hf_token(char out[MUSE_HF_TOKEN_MAX + 1])
 {
-    return s.reply_language == MUSE_REPLY_MANDARIN ? MUSE_REPLY_MANDARIN : MUSE_REPLY_CANTONESE;
+    LOCKED(strlcpy(out, s.hf_token, MUSE_HF_TOKEN_MAX + 1));
+}
+
+size_t muse_settings_hf_token_len(void)
+{
+    size_t n;
+    LOCKED(n = strlen(s.hf_token));
+    return n;
+}
+
+void muse_settings_fish_api_key(char out[MUSE_FISH_API_KEY_MAX + 1])
+{
+    LOCKED(strlcpy(out, s.fish_api_key, MUSE_FISH_API_KEY_MAX + 1));
+}
+
+size_t muse_settings_fish_api_key_len(void)
+{
+    size_t n;
+    LOCKED(n = strlen(s.fish_api_key));
+    return n;
 }
 
 void muse_settings_set_volume(int pct)
@@ -340,9 +360,48 @@ esp_err_t muse_settings_set_gemini_key(const char *key, bool append)
     return err;
 }
 
-void muse_settings_set_reply_language(muse_reply_language_t language)
+esp_err_t muse_settings_set_hf_token(const char *token, bool append)
 {
-    s.reply_language = language == MUSE_REPLY_MANDARIN ? MUSE_REPLY_MANDARIN : MUSE_REPLY_CANTONESE;
-    save_u8("reply_lang", s.reply_language);
-    notify(MUSE_SETTING_LANGUAGE);
+    esp_err_t err = ESP_OK;
+    LOCKED({
+        size_t have = append ? strlen(s.hf_token) : 0;
+        size_t add = strlen(token ? token : "");
+        if (have + add > MUSE_HF_TOKEN_MAX) {
+            err = ESP_ERR_INVALID_SIZE;
+        } else {
+            if (!append) {
+                memset(s.hf_token, 0, sizeof(s.hf_token));
+            }
+            memcpy(s.hf_token + have, token ? token : "", add);
+            s.hf_token[have + add] = '\0';
+            save_str("hf_token", s.hf_token);
+        }
+    });
+    if (err == ESP_OK) {
+        notify(MUSE_SETTING_HUGGINGFACE);
+    }
+    return err;
+}
+
+esp_err_t muse_settings_set_fish_api_key(const char *key, bool append)
+{
+    esp_err_t err = ESP_OK;
+    LOCKED({
+        size_t have = append ? strlen(s.fish_api_key) : 0;
+        size_t add = strlen(key ? key : "");
+        if (have + add > MUSE_FISH_API_KEY_MAX) {
+            err = ESP_ERR_INVALID_SIZE;
+        } else {
+            if (!append) {
+                memset(s.fish_api_key, 0, sizeof(s.fish_api_key));
+            }
+            memcpy(s.fish_api_key + have, key ? key : "", add);
+            s.fish_api_key[have + add] = '\0';
+            save_str("fish_key", s.fish_api_key);
+        }
+    });
+    if (err == ESP_OK) {
+        notify(MUSE_SETTING_FISH_AUDIO);
+    }
+    return err;
 }

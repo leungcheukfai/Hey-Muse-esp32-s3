@@ -44,7 +44,7 @@
 
 static const char *TAG = "muse_voice";
 
-#define MAX_SECS 15
+#define MAX_SECS 30
 #define TAIL_FRAMES (MUSE_AUDIO_RATE * 12 / 100)   /* capture lag + poll interval, stops before the release click */
 #define MAX_FRAMES (MUSE_AUDIO_RATE * MAX_SECS)
 #define MIN_HELD_FRAMES (MUSE_AUDIO_RATE * 3 / 10)   /* shorter presses are taps, not speech */
@@ -58,7 +58,8 @@ static const char *TAG = "muse_voice";
 #define SETTLE_CHUNKS 10   /* after Muse makes a sound, 200 ms of capture is its own tail */
 #define REST_BACKSTOP_MS 60000
 #define AUTO_SILENCE_DBFS -42.0f
-#define AUTO_SILENCE_FRAMES (MUSE_AUDIO_RATE * 12 / 10)
+#define AUTO_SILENCE_SECS 2
+#define AUTO_SILENCE_FRAMES (MUSE_AUDIO_RATE * AUTO_SILENCE_SECS)
 
 #if CONFIG_MUSE_HATCH
 /* A note recorded while Hatch is out of reach is saved in PSRAM, and goes once it's back. */
@@ -905,6 +906,9 @@ static void voice_task(void *arg)
             }
             /* The 20 ms read paces this loop. */
             bool detected = idle_capture();
+            if (detected) {
+                muse_state_set_asleep(false);
+            }
             if (xQueueReceive(s_queue, &ev, 0) == pdTRUE) {
                 muse_state_poke();
                 if (ev.type != MUSE_PTT_DOWN) {

@@ -34,6 +34,8 @@
 #define MUSE_VM_MAX 63
 #define MUSE_TOKEN_MAX 1023
 #define MUSE_GEMINI_KEY_MAX 128
+#define MUSE_HF_TOKEN_MAX 128
+#define MUSE_FISH_API_KEY_MAX 128
 
 #define MUSE_MIC_GAIN_MAX 36      /* dB; ES7210 PGA, applied in 3 dB steps */
 
@@ -47,13 +49,9 @@ typedef enum {
     MUSE_SETTING_BLE,
     MUSE_SETTING_HATCH,
     MUSE_SETTING_GEMINI,
-    MUSE_SETTING_LANGUAGE,
+    MUSE_SETTING_HUGGINGFACE,
+    MUSE_SETTING_FISH_AUDIO,
 } muse_setting_t;
-
-typedef enum {
-    MUSE_REPLY_CANTONESE,
-    MUSE_REPLY_MANDARIN,
-} muse_reply_language_t;
 
 typedef void (*muse_setting_cb_t)(muse_setting_t what);
 
@@ -75,7 +73,10 @@ void muse_settings_hatch_token(char out[MUSE_TOKEN_MAX + 1]);
 size_t muse_settings_hatch_token_len(void);
 void muse_settings_gemini_key(char out[MUSE_GEMINI_KEY_MAX + 1]);
 size_t muse_settings_gemini_key_len(void);
-muse_reply_language_t muse_settings_reply_language(void);
+void muse_settings_hf_token(char out[MUSE_HF_TOKEN_MAX + 1]);
+size_t muse_settings_hf_token_len(void);
+void muse_settings_fish_api_key(char out[MUSE_FISH_API_KEY_MAX + 1]);
+size_t muse_settings_fish_api_key_len(void);
 
 void muse_settings_set_volume(int pct);
 void muse_settings_set_speaker_on(bool on);
@@ -93,4 +94,7 @@ void muse_settings_set_hatch_vm(const char *vm);
 esp_err_t muse_settings_set_hatch_token(const char *token, bool append);
 /* The Gemini key is entered over authenticated BLE and saved to NVS. */
 esp_err_t muse_settings_set_gemini_key(const char *key, bool append);
-void muse_settings_set_reply_language(muse_reply_language_t language);
+/* Hugging Face access token for routed Inference Provider TTS. */
+esp_err_t muse_settings_set_hf_token(const char *token, bool append);
+/* Fish Audio API key for hosted text-to-speech. */
+esp_err_t muse_settings_set_fish_api_key(const char *key, bool append);

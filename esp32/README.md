@@ -14,11 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 
-# ESP32 Device SDK
+# Hey Muse Firmware for ESP32
 
-Flash this open source firmware onto any ESP32-compatible board to connect
-Muse to your home Wi-Fi. On boards with the home-network tunnel, Muse can reach
-the devices you already own and anything you build with a local HTTP API.
+This repository is the English-first community firmware project for Muse
+gadgets. Its primary target is the Waveshare ESP32-S3-Touch-AMOLED-1.75C; other
+ESP32 boards supported by the underlying Muse Gadgets SDK may also build. See
+the [project README](../README.md) for the Hey Muse features and the 1.75C
+build-and-flash steps.
 
 Then hack on it: add a display, a button, or support for a board we haven't
 tried yet, and build your own Muse gadget.
@@ -51,8 +53,8 @@ curl -fsSL https://dev.meta.ai/install.sh | sh
 Then plug in your board, and start Muse Code from this directory:
 
 ```sh
-git clone https://github.com/facebookincubator/muse-gadget-sdk
-cd muse-gadget-sdk/esp32
+git clone https://github.com/leungcheukfai/Hey-Muse-esp32-s3.git
+cd Hey-Muse-esp32-s3/esp32
 muse --disable-sandbox
 ```
 

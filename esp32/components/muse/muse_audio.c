@@ -35,6 +35,24 @@ static const char *TAG = "muse_audio";
 #define CHANNELS 2
 #define HPF_HZ 80.0f
 
+#if CONFIG_MUSE_BOARD_WAVESHARE_S3_175C
+/* The 1.75C's small built-in speaker is quiet at codec volume 100. Raise
+ * low-level PCM by 6 dB, then compress only strong peaks to avoid hard clips. */
+#define SPEAKER_BOOST_KNEE 24000
+#define SPEAKER_BOOST_PEAK_RATIO 5
+
+static int16_t speaker_boost(int16_t sample)
+{
+    int32_t magnitude = sample < 0 ? -(int32_t)sample : (int32_t)sample;
+    magnitude *= 2;
+    if (magnitude > SPEAKER_BOOST_KNEE) {
+        magnitude = SPEAKER_BOOST_KNEE +
+                    (magnitude - SPEAKER_BOOST_KNEE) / SPEAKER_BOOST_PEAK_RATIO;
+    }
+    return (int16_t)(sample < 0 ? -magnitude : magnitude);
+}
+#endif
+
 static esp_codec_dev_handle_t s_spk;
 static esp_codec_dev_handle_t s_mic;
 static bool s_open;
@@ -276,8 +294,14 @@ esp_err_t muse_audio_write(const int16_t *mono, size_t frames)
     while (frames) {
         size_t n = frames > MUSE_AUDIO_CHUNK ? MUSE_AUDIO_CHUNK : frames;
         for (size_t i = 0; i < n; i++) {
-            s_out_stereo[2 * i] = mute ? 0 : mono[i];
-            s_out_stereo[2 * i + 1] = mute ? 0 : mono[i];
+            int16_t sample = mute ? 0 : mono[i];
+#if CONFIG_MUSE_BOARD_WAVESHARE_S3_175C
+            if (!mute) {
+                sample = speaker_boost(sample);
+            }
+#endif
+            s_out_stereo[2 * i] = sample;
+            s_out_stereo[2 * i + 1] = sample;
         }
         if (esp_codec_dev_write(s_spk, s_out_stereo, n * CHANNELS * sizeof(int16_t)) != ESP_CODEC_DEV_OK) {
             return ESP_FAIL;

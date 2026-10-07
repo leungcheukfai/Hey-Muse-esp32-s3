@@ -1,7 +1,7 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 
-"""Exercise the Traditional Chinese UI dictionary on the host."""
+"""Exercise English UI strings and reply-language prompts on the host."""
 import os
 from pathlib import Path
 import shlex
@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class MuseLanguageTest(unittest.TestCase):
-    def test_ui_strings_have_traditional_chinese_translations(self):
+    def test_ui_strings_remain_english(self):
         with tempfile.TemporaryDirectory() as tmp:
             binary = Path(tmp) / "muse_lang_test"
             subprocess.run(

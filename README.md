@@ -16,22 +16,28 @@ limitations under the License.
 
 # Hey Muse for ESP32-S3
 
-Experimental community firmware adding on-device **“Hey Muse”** wake-word
-recognition to the Waveshare ESP32-S3-Touch-AMOLED-1.75C, using the Muse
-Gadgets SDK. Push-to-talk remains available. The wake detector runs locally;
-voice turns use the existing Muse connection.
+Experimental, English-first community firmware adding on-device **“Hey Muse”**
+wake-word recognition to the Waveshare ESP32-S3-Touch-AMOLED-1.75C, using the
+Muse Gadgets SDK. The on-device menus, phone setup, documentation, and Muse
+replies are English-only. Push-to-talk remains available. The wake detector
+runs locally; voice turns use the existing Muse connection.
 
 This is an unofficial community project, not made or endorsed by Meta. It is
 based on the [Muse Gadgets SDK](https://github.com/facebookincubator/muse-gadget-sdk).
 The wake-word model is from [wobsoriano/hey-muse](https://github.com/wobsoriano/hey-muse);
 its MIT license and attribution are included beside the model.
 
+For a start-to-finish guide to installing ESP-IDF, building and flashing the
+1.75C, pairing with Muse, saving a Fish Audio key, and testing voice replies,
+see the [setup guide](docs/SETUP.md).
+
 ## Status
 
-Wake-word detection and hands-free recording are experimental. This source
-snapshot has not yet been built and validated on the 1.75C hardware. Listening
-is intended to operate while the device is awake or on USB power and to stop
-when battery sleep powers the audio hardware down. See
+Wake-word detection and hands-free recording are experimental. The firmware
+has been built and flashed on 1.75C hardware during development; the voice flow
+still needs broader real-world testing. Listening is intended to operate while
+the device is awake or on USB power and to stop when battery sleep powers the
+audio hardware down. See
 [`esp32/devices/README.md`](esp32/devices/README.md) for board notes.
 
 ## Build and flash
@@ -65,9 +71,25 @@ The firmware build can contain the SDK token from `sdkconfig`. Do not publish a
 `.bin` built with your personal token. Keep the token in the ignored local
 build configuration and have each user build with their own token.
 
-## Language
+## Add spoken replies
 
-繁體中文社群使用說明：[README.zh-Hant.md](README.zh-Hant.md)
+All spoken replies use Fish Audio's S2.1 Pro Free TTS API. Muse's reply text is
+sent to Fish over HTTPS; microphone audio is not sent to Fish. The API key is
+saved on the device after flashing and is not compiled into the firmware.
+
+Create a Fish Audio API key at <https://fish.audio/app/api-keys>. With the
+1.75C connected by USB, run this from `esp32/` in an ESP-IDF terminal:
+
+```sh
+python tools/muse/save_fish_api_key.py
+```
+
+The helper finds the connected board and asks for the key with hidden input.
+It sends the key over USB, prints only the save result, and stores it in
+encrypted device NVS. Check **Settings > Voice replies** for
+`Fish Audio API key saved`. You can also enter the key on the Bluetooth setup
+page. Free-tier availability and fair-use limits follow Fish Audio's current
+terms.
 
 ## License
 

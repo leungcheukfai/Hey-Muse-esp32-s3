@@ -22,7 +22,7 @@ Choose option 1. Keep the wake-word component isolated so its runtime can be cha
 - Scope the first implementation to the Waveshare 1.75C board profile.
 - Add a focused wake-word component that embeds the supplied TFLite model and runs streaming inference on 16 kHz mono microphone frames using Espressif’s TFLite Micro component and compatible microWakeWord feature processing.
 - Feed the existing microphone frames to the detector from the voice task; do not open a second audio capture path.
-- On detection, retain enough recent audio to carry the user’s first words into the request, then start the existing Muse voice turn automatically. End the recording after trailing silence, with the existing 15-second maximum as a cap.
+- On detection, retain enough recent audio to carry the user’s first words into the request, then start the existing Muse voice turn automatically. After speech has been detected, end recording after 2 seconds of silence and submit the captured note to Muse. Keep the 30-second maximum as a safety cap.
 - Keep push-to-talk available as a manual fallback. Suspend detection during recording and reply playback, then reset the detector before listening again so the speaker does not trigger a new turn.
 - Listen while the device is awake or powered by USB. Preserve current battery sleep behavior: when the device sleeps on battery, power down the codecs and pause wake detection.
 - If the detector or model fails to initialize, log the failure and leave push-to-talk working.

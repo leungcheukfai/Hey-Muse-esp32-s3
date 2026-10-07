@@ -67,7 +67,7 @@ extern "C" {
 #include "cJSON.h"
 #include "minimp3.h"
 #include "muse_account_api.h"
-#include "muse_gemini_tts.h"
+#include "muse_fish_tts.h"
 #include "muse_link.h"
 #include "muse_lang.h"
 #include "muse_settings.h"
@@ -1217,8 +1217,7 @@ static void post_chat(const char *text)
     ESP_LOGI(TAG, "heard %u characters", (unsigned)strlen(text));
     emit(MUSE_HATCH_EV_HEARD, text);
     char prompt[1408];
-    const char *instruction = muse_lang_chat_instruction(
-        muse_settings_reply_language() == MUSE_REPLY_CANTONESE);
+    const char *instruction = muse_lang_chat_instruction();
     int n = snprintf(prompt, sizeof(prompt), "%s\n\n%s", instruction, text);
     if (n < 0 || (size_t)n >= sizeof(prompt)) {
         turn_fail("MESSAGE TOO LONG");
@@ -1527,7 +1526,7 @@ typedef struct {
     uint32_t gen;
 } tts_output_t;
 
-static bool queue_gemini_pcm(const int16_t *pcm, size_t frames, void *context)
+static bool queue_reply_pcm(const int16_t *pcm, size_t frames, void *context)
 {
     tts_output_t *output = static_cast<tts_output_t *>(context);
     msg_t &m = s_turn.msgs[output->msg];
@@ -1580,46 +1579,58 @@ static void start_tts(void)
         if (m.tts != TTS_QUEUED) {
             continue;
         }
-        const char *text = s_turn.texts ? s_turn.texts + i * TEXT_MAX : nullptr;
-        char key[MUSE_GEMINI_KEY_MAX + 1] = {};
-        if (muse_settings_speaker_on() && text) {
-            muse_settings_gemini_key(key);
+        /* Keep a short caption tail with each message even if the full reply
+         * buffer could not be allocated. */
+        const char *text = s_turn.texts ? s_turn.texts + i * TEXT_MAX : m.tail;
+        char api_key[MUSE_FISH_API_KEY_MAX + 1] = {};
+        const bool speaker_on = muse_settings_speaker_on();
+        if (speaker_on && text && text[0]) {
+            muse_settings_fish_api_key(api_key);
         }
-        if (key[0]) {
+        if (api_key[0]) {
+            if (!s_turn.texts) {
+                ESP_LOGW(TAG, "full reply text unavailable; speaking recent caption text only");
+            }
             m.pcm_start = s_turn.pcm_out;
             m.pcm_frames = 0;
             m.tts = TTS_ACTIVE;
             s_turn.tts_msg = i;
             s_turn.silent = false;
-            ESP_LOGI(TAG, "generating Gemini speech for message %s", m.id);
+            ESP_LOGI(TAG, "generating Fish Audio speech for message %s", m.id);
             show_reply_start(m);
 
             tts_output_t output = { i, s_turn.gen };
-            bool cantonese = muse_settings_reply_language() == MUSE_REPLY_CANTONESE;
-            esp_err_t err = muse_gemini_tts_generate(key, text, muse_lang_tts_style(cantonese),
-                                                     queue_gemini_pcm, &output);
-            wipe_key(key, sizeof(key));
+            esp_err_t err = muse_fish_tts_generate(api_key, text, queue_reply_pcm, &output);
+            wipe_key(api_key, sizeof(api_key));
             if (output.gen != s_gen.load()) {
                 return;
             }
             if (err == ESP_OK) {
                 m.tts = TTS_FINISHED;
                 s_turn.tts_msg = -1;
-                ESP_LOGI(TAG, "Gemini speech ready (%u frames)", (unsigned)m.pcm_frames);
+                ESP_LOGI(TAG, "Fish Audio speech ready (%u frames)", (unsigned)m.pcm_frames);
             } else if (m.pcm_frames) {
                 m.tts = TTS_FINISHED;
                 s_turn.tts_msg = -1;
-                ESP_LOGW(TAG, "Gemini speech stopped after %u frames", (unsigned)m.pcm_frames);
+                ESP_LOGW(TAG, "Fish Audio speech stopped after %u frames", (unsigned)m.pcm_frames);
             } else {
                 m.pcm_frames = (uint32_t)(utf8_character_count(text) * MIC_RATE / TEXT_CHARS_PER_S);
                 s_turn.silent = true;
-                ESP_LOGW(TAG, "Gemini speech unavailable (%s); showing captions", esp_err_to_name(err));
+                ESP_LOGW(TAG, "Fish Audio speech unavailable (%s); showing captions", esp_err_to_name(err));
             }
             return;
         }
-        wipe_key(key, sizeof(key));
+        wipe_key(api_key, sizeof(api_key));
 
-        /* Without a Gemini key, pace the reply captions without audio. */
+        if (!speaker_on) {
+            ESP_LOGW(TAG, "spoken reply skipped: speaker is disabled");
+        } else if (!text || !text[0]) {
+            ESP_LOGW(TAG, "spoken reply skipped: reply text is unavailable");
+        } else {
+            ESP_LOGW(TAG, "spoken reply skipped: no TTS token is available");
+        }
+
+        /* Without a TTS token, pace the reply captions without audio. */
         m.pcm_start = s_turn.pcm_out;
         const char *caption = s_turn.texts ? s_turn.texts + i * TEXT_MAX : m.tail;
         m.pcm_frames = (uint32_t)(utf8_character_count(caption) * MIC_RATE / TEXT_CHARS_PER_S);
@@ -2145,6 +2156,9 @@ extern "C" void muse_hatch_start(void)
     s_turn.mp3 = static_cast<uint8_t *>(psram_alloc(MP3_BUF));
     s_turn.note = VOICE_NOTE ? static_cast<uint8_t *>(psram_alloc(NOTE_PART_BYTES)) : nullptr;
     s_turn.texts = static_cast<char *>(psram_alloc(MAX_MSGS * TEXT_MAX));   /* captions just stay untimed without it */
+    if (!s_turn.texts) {
+            ESP_LOGW(TAG, "reply text buffer unavailable; Fish Audio will use recent caption text only");
+    }
     s_pcm = static_cast<int16_t *>(psram_alloc(MINIMP3_MAX_SAMPLES_PER_FRAME * sizeof(int16_t)));
     s_pcm16 = static_cast<int16_t *>(psram_alloc((MINIMP3_MAX_SAMPLES_PER_FRAME + 8) * sizeof(int16_t)));
     for (auto &s : s_streams) {

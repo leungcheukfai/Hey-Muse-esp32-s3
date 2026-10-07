@@ -161,13 +161,13 @@ static void run_command(char *cmd)
         if (muse_settings_set_gemini_key(v, cmd[10] == '+') != ESP_OK) {
             res = "error: Gemini key too long";
         }
-    } else if (!strcmp(cmd, "gemini.language")) {
-        if (!strcmp(v, "cantonese")) {
-            muse_settings_set_reply_language(MUSE_REPLY_CANTONESE);
-        } else if (!strcmp(v, "mandarin")) {
-            muse_settings_set_reply_language(MUSE_REPLY_MANDARIN);
-        } else {
-            res = "error: expected cantonese or mandarin";
+    } else if (!strcmp(cmd, "hf.token") || !strcmp(cmd, "hf.token+")) {
+        if (muse_settings_set_hf_token(v, cmd[8] == '+') != ESP_OK) {
+            res = "error: Hugging Face token too long";
+        }
+    } else if (!strcmp(cmd, "fish.key") || !strcmp(cmd, "fish.key+")) {
+        if (muse_settings_set_fish_api_key(v, cmd[8] == '+') != ESP_OK) {
+            res = "error: Fish Audio API key too long";
         }
     } else if (!strcmp(cmd, "hatch.test")) {
         muse_hatch_test();
@@ -188,7 +188,9 @@ static void run_command(char *cmd)
     }
 
     /* Never echo secrets back. */
-    bool secret = !strcmp(cmd, "wifi.pass") || !strncmp(cmd, "hatch.token", 11) || !strncmp(cmd, "gemini.key", 10);
+    bool secret = !strcmp(cmd, "wifi.pass") || !strncmp(cmd, "hatch.token", 11) ||
+                  !strncmp(cmd, "gemini.key", 10) || !strncmp(cmd, "hf.token", 8) ||
+                  !strncmp(cmd, "fish.key", 8);
     snprintf(s_last, sizeof(s_last), "%s: %s", cmd, res);
     ESP_LOGI(TAG, "cmd %s%s%s -> %s", cmd, secret ? "" : "=", secret ? "" : v, res);
     muse_state_poke();

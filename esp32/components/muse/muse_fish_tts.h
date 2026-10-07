@@ -16,17 +16,14 @@
 
 #pragma once
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 
-/* Returns the SDK UI text unchanged for this English-first build. */
-const char *muse_lang_get(const char *english);
+#include "esp_err.h"
 
-/* This edition asks Muse to reply in English for display and speech. */
-const char *muse_lang_chat_instruction(void);
-const char *muse_lang_tts_style(void);
+typedef bool (*muse_fish_pcm_cb_t)(const int16_t *pcm, size_t frames, void *context);
 
-#ifdef __cplusplus
-}
-#endif
+/* Requests Fish Audio S2.1 Pro Free and streams 16 kHz mono PCM to cb.
+ * The caller owns and must clear api_key after this call. */
+esp_err_t muse_fish_tts_generate(const char *api_key, const char *text, muse_fish_pcm_cb_t cb, void *context);

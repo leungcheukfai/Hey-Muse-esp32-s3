@@ -40,7 +40,7 @@ constexpr size_t FEATURE_STEP_MS = 10;
 constexpr size_t TENSOR_ARENA_SIZE = 64 * 1024;
 constexpr size_t VARIABLE_ARENA_SIZE = 1024;
 constexpr size_t PROBABILITY_WINDOW = 6;
-constexpr size_t WARMUP_WINDOWS = 100;
+constexpr size_t WARMUP_WINDOWS = 20;
 constexpr uint8_t PROBABILITY_CUTOFF = static_cast<uint8_t>(0.99f * 255.0f);
 
 struct FrontendState s_frontend{};
@@ -335,9 +335,13 @@ extern "C" void muse_wake_reset(void)
     if (s_frontend_ready) {
         FrontendReset(&s_frontend);
     }
-    /* Recreate the interpreter so its streaming resource variables cannot
-     * carry room audio or reply playback into the next listening period. */
-    release_model();
+    /* Reset streaming variables in place so the next wake doesn't have to
+     * allocate the model again. The brief settle period in muse_voice drops
+     * the speaker tail; 20 low-probability windows then re-arm detection. */
+    if (s_interpreter && s_interpreter->Reset() != kTfLiteOk) {
+        ESP_LOGW(TAG, "could not reset Hey Muse model; recreating interpreter");
+        release_model();
+    }
     reset_probabilities();
 }
 

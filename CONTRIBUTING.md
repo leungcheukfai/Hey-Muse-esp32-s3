@@ -1,31 +1,21 @@
-# Contributing to muse-gadget-sdk
-We want to make contributing to this project as easy and transparent as
-possible.
+# Contributing to Hey Muse for ESP32-S3
 
-## Pull Requests
-We actively welcome your pull requests.
+Thanks for helping improve this English-first community firmware project.
 
-1. Fork the repo and create your branch from `main`.
-2. If you've added code that should be tested, add tests.
-3. If you've changed APIs, update the documentation.
-4. Ensure the test suite passes.
-5. Make sure your code lints.
-6. If you haven't already, complete the Contributor License Agreement ("CLA").
+## Before opening a pull request
 
-## Contributor License Agreement ("CLA")
-In order to accept your pull request, we need you to submit a CLA. You only need
-to do this once to work on any of Facebook's open source projects.
+- Describe the board and ESP-IDF version used to reproduce a bug.
+- Keep changes focused and update the relevant documentation.
+- Build the Waveshare 1.75C target with `tools/muse/board.sh build s3` from
+  `esp32/` when your changes affect the firmware.
+- Never commit a Muse SDK token, a speech-service API key, Wi-Fi credentials,
+  or private audio recordings.
 
-Complete your CLA here: <https://code.facebook.com/cla>
-
-## Issues
-We use GitHub issues to track public bugs. Please ensure your description is
-clear and has sufficient instructions to be able to reproduce the issue.
-
-Facebook has a [bounty program](https://www.facebook.com/whitehat/) for the safe
-disclosure of security bugs. In those cases, please go through the process
-outlined on that page and do not file a public issue.
+Please include the build or reproduction details in your pull request. Hardware
+changes should say which board was used and what was verified on the device.
 
 ## License
-By contributing to muse-gadget-sdk, you agree that your contributions will be licensed
-under the LICENSE file in the root directory of this source tree.
+
+The firmware source is licensed under Apache-2.0. The Hey Muse wake-word model
+has its own MIT license and attribution beside the model. See [`LICENSE`](LICENSE)
+and `esp32/components/muse/models/HEY-MUSE-LICENSE`.
