@@ -14,6 +14,41 @@
 
 menu "ESP32 Device SDK"
 
+    menu "Hey Muse Fish Audio"
+        depends on MUSE_ENABLED && MUSE_HATCH
+
+        config MUSE_FISH_API_KEY
+            string "Fish Audio API key (local builds only)"
+            default ""
+            help
+                Optional personal Fish Audio key compiled into the firmware.
+                Anyone who receives this firmware can extract and use the key.
+                For shared firmware, leave this blank and enter a key on the
+                device using Phone Setup or the USB helper. Maximum length: 128
+                characters.
+
+        config MUSE_FISH_VOICE_1_NAME
+            string "Voice 1 name"
+            default "Muse"
+        config MUSE_FISH_VOICE_1_ID
+            string "Voice 1 Fish Audio model ID"
+            default "1df12c4bb692423283fde2bdc7f84093"
+
+        config MUSE_FISH_VOICE_2_NAME
+            string "Voice 2 name"
+            default "Ethan"
+        config MUSE_FISH_VOICE_2_ID
+            string "Voice 2 Fish Audio model ID (blank disables this slot)"
+            default "536d3a5e000945adb7038665781a4aca"
+
+        config MUSE_FISH_VOICE_3_NAME
+            string "Voice 3 name"
+            default "Sarah"
+        config MUSE_FISH_VOICE_3_ID
+            string "Voice 3 Fish Audio model ID (blank disables this slot)"
+            default "933563129e564b19a115bedd57b7406a"
+    endmenu
+
     config GADGET_PRODUCT_NAME
         string "Human-visible product name for log messages"
         default "Muse Gadget"

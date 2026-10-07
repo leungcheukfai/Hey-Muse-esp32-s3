@@ -154,18 +154,36 @@ python tools/muse/save_fish_api_key.py
 
 The helper detects the board and prompts for the API key with hidden input.
 Paste the key and press Return; the characters will not appear as you type.
-The helper sends the key over USB and saves it in the device's encrypted NVS.
-It does not print the key. You do not need to rebuild or reflash to change the
-key. Close any serial monitor that is using the board's USB port before
-running the helper.
+The helper sends the key over USB and saves it in device NVS. It does not
+print the key. This firmware does not encrypt NVS at rest. You do not need to
+rebuild or reflash to change the key. Close any serial monitor that is using
+the board's USB port before running the helper.
 
 On the device, open **Settings → Voice Replies** and confirm that the status
 says **Fish Audio API key saved**. For spoken replies, the device sends Muse's
 reply text to Fish Audio over HTTPS. Microphone audio continues to go to Muse;
 it is not sent to Fish Audio. Fish Audio's model availability, free usage, and
 account limits can change; check its current account page and terms. The
-firmware uses [this Fish Audio voice](https://fish.audio/app/m/1df12c4bb692423283fde2bdc7f84093)
-by default.
+firmware provides three configurable voice slots named Muse, Ethan, and Sarah.
+Slot 1 defaults to [this Fish Audio voice](https://fish.audio/app/m/1df12c4bb692423283fde2bdc7f84093);
+slots 2 and 3 use the Ethan and Sarah IDs configured for this project.
+
+To set voice names and model IDs, run this from `esp32/`:
+
+```sh
+idf.py -B build-muse-waveshare-s3-175c menuconfig
+```
+
+Open **ESP32 Device SDK → Hey Muse Fish Audio**. Enter a Fish Audio model ID
+in each slot you want enabled, save `sdkconfig`, then rebuild and flash. Use
+the Bluetooth Phone Setup page to switch among the configured slots after
+flashing. Fish Audio selects the requested voice using `reference_id`.
+
+For a personal build, **Fish Audio API key (local builds only)** in that same
+menuconfig page can embed a key in the firmware. Anyone who receives that
+binary can extract and use the key. Leave it blank for community firmware and
+let each user enter a key through Phone Setup or the USB helper. Do not commit
+`sdkconfig` files or share binaries that contain personal credentials.
 
 ## 7. Try Hey Muse
 

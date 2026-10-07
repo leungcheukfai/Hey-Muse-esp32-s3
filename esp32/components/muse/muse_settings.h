@@ -36,6 +36,11 @@
 #define MUSE_GEMINI_KEY_MAX 128
 #define MUSE_HF_TOKEN_MAX 128
 #define MUSE_FISH_API_KEY_MAX 128
+#define MUSE_FISH_VOICE_ID_MAX 64
+#ifndef CONFIG_MUSE_FISH_VOICE_1_ID
+#define CONFIG_MUSE_FISH_VOICE_1_ID "1df12c4bb692423283fde2bdc7f84093"
+#endif
+#define MUSE_FISH_DEFAULT_VOICE_ID CONFIG_MUSE_FISH_VOICE_1_ID
 
 #define MUSE_MIC_GAIN_MAX 36      /* dB; ES7210 PGA, applied in 3 dB steps */
 
@@ -51,6 +56,7 @@ typedef enum {
     MUSE_SETTING_GEMINI,
     MUSE_SETTING_HUGGINGFACE,
     MUSE_SETTING_FISH_AUDIO,
+    MUSE_SETTING_FISH_VOICE,
 } muse_setting_t;
 
 typedef void (*muse_setting_cb_t)(muse_setting_t what);
@@ -77,6 +83,7 @@ void muse_settings_hf_token(char out[MUSE_HF_TOKEN_MAX + 1]);
 size_t muse_settings_hf_token_len(void);
 void muse_settings_fish_api_key(char out[MUSE_FISH_API_KEY_MAX + 1]);
 size_t muse_settings_fish_api_key_len(void);
+void muse_settings_fish_voice_id(char out[MUSE_FISH_VOICE_ID_MAX + 1]);
 
 void muse_settings_set_volume(int pct);
 void muse_settings_set_speaker_on(bool on);
@@ -98,3 +105,5 @@ esp_err_t muse_settings_set_gemini_key(const char *key, bool append);
 esp_err_t muse_settings_set_hf_token(const char *token, bool append);
 /* Fish Audio API key for hosted text-to-speech. */
 esp_err_t muse_settings_set_fish_api_key(const char *key, bool append);
+/* An empty ID restores the project default voice. */
+esp_err_t muse_settings_set_fish_voice_id(const char *voice_id);

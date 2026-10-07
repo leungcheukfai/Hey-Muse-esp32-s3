@@ -101,7 +101,11 @@
       <input id="fish-key" type="password" autocomplete="off" maxlength="128" placeholder="Paste your Fish Audio API key">
       <button id="fish-save">Save key</button>
       <button id="fish-clear" class="secondary">Clear key</button>
-      <p class="dim">The device uses Fish Audio S2.1 Pro Free for spoken replies. It sends reply text to Fish over HTTPS; microphone audio is not sent to Fish. Your key is sent over authenticated, encrypted Bluetooth and stored in encrypted NVS on the 1.75C. This page does not store it. Prefer USB? From the <code>esp32/</code> folder, run <code>python tools/muse/save_fish_api_key.py</code> in an ESP-IDF terminal.</p>
+      <label for="fish-voice">Voice</label>
+      <select id="fish-voice"></select>
+      <button id="fish-voice-save">Use selected voice</button>
+      <p class="dim">The three voice slots are set in ESP-IDF menuconfig under <b>ESP32 Device SDK &rsaquo; Hey Muse Fish Audio</b>. Set a slot's name and Fish Audio model ID, then rebuild and flash to add it. The setup page lets you choose among the configured slots. Fish receives reply text over HTTPS; microphone audio is not sent to Fish. The API key is sent over authenticated, encrypted Bluetooth and stored in plain device NVS. This page does not store the key. For USB key entry, run <code>python tools/muse/save_fish_api_key.py</code> from the <code>esp32/</code> folder in an ESP-IDF terminal.</p>
+      <p class="dim"><a href="https://docs.fish.audio/features/manage-voices" target="_blank" rel="noopener">Browse Fish Audio voices</a>.</p>
       <p class="dim"><a href="https://fish.audio/app/api-keys" target="_blank" rel="noopener">Create a Fish Audio API key</a></p>
       <div id="fish-status" class="dim"></div>
     </section>
@@ -165,6 +169,25 @@ async function refresh() {
   if (document.activeElement !== $('ssid') && !$('ssid').value) $('ssid').value = w.ssid;
   if (document.activeElement !== $('host')) $('host').value = h.host;
   if (document.activeElement !== $('vm')) $('vm').value = h.vm;
+  const voices = Array.isArray(s.fish_voices) ? s.fish_voices : [];
+  const selectedVoice = s.fish_voice_id || '';
+  if (document.activeElement !== $('fish-voice')) {
+    $('fish-voice').replaceChildren();
+    for (const voice of voices) {
+      const option = document.createElement('option');
+      option.value = voice.id;
+      option.textContent = voice.name || voice.id;
+      $('fish-voice').append(option);
+    }
+    if (selectedVoice && !voices.some(v => v.id === selectedVoice)) {
+      const option = document.createElement('option');
+      option.value = selectedVoice;
+      option.textContent = 'Current voice (not in configured slots)';
+      $('fish-voice').append(option);
+    }
+    $('fish-voice').value = selectedVoice;
+    $('fish-voice-save').disabled = !selectedVoice;
+  }
   setRange('volume', s.volume, v => `${v}%`);
   $('speaker').checked = s.speaker;
   setRange('mic', s.mic_gain, v => `${v} dB`);
@@ -238,6 +261,15 @@ $('fish-clear').onclick = async () => {
   await send('fish.key', '');
   $('fish-key').value = '';
   $('fish-status').textContent = 'Clear command sent. Check the connection log for the result.';
+};
+$('fish-voice-save').onclick = async () => {
+  const voiceId = $('fish-voice').value;
+  if (!voiceId) {
+    log('No voice slots are configured. Add a voice ID in menuconfig, then rebuild and flash.', 'bad');
+    return;
+  }
+  await send('fish.voice', voiceId);
+  $('fish-status').textContent = 'Voice saved. New replies will use this voice.';
 };
 
 $('wifi-join').onclick = async () => {

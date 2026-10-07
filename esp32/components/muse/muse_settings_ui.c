@@ -1248,7 +1248,7 @@ static void build_speech_page(lv_obj_t *tile)
     note(list, "Muse replies and speech are in English.");
     s_speech_tts_status = note(list, "");
     note(list, "Spoken replies use Fish Audio S2.1 Pro Free.");
-    note(list, "Enter its API key in Phone Setup, or run save_fish_api_key.py over USB.");
+    note(list, "Enter its API key in Phone Setup, use save_fish_api_key.py over USB, or set it in menuconfig for a private build.");
     note(list, "Fish receives reply text only; the microphone audio stays with Muse.");
     note(list, "With no API key, Muse shows replies as captions without speech.");
 }

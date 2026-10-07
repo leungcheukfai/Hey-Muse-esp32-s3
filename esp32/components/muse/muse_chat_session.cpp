@@ -1583,9 +1583,11 @@ static void start_tts(void)
          * buffer could not be allocated. */
         const char *text = s_turn.texts ? s_turn.texts + i * TEXT_MAX : m.tail;
         char api_key[MUSE_FISH_API_KEY_MAX + 1] = {};
+        char voice_id[MUSE_FISH_VOICE_ID_MAX + 1] = {};
         const bool speaker_on = muse_settings_speaker_on();
         if (speaker_on && text && text[0]) {
             muse_settings_fish_api_key(api_key);
+            muse_settings_fish_voice_id(voice_id);
         }
         if (api_key[0]) {
             if (!s_turn.texts) {
@@ -1600,7 +1602,7 @@ static void start_tts(void)
             show_reply_start(m);
 
             tts_output_t output = { i, s_turn.gen };
-            esp_err_t err = muse_fish_tts_generate(api_key, text, queue_reply_pcm, &output);
+            esp_err_t err = muse_fish_tts_generate(api_key, voice_id, text, queue_reply_pcm, &output);
             wipe_key(api_key, sizeof(api_key));
             if (output.gen != s_gen.load()) {
                 return;

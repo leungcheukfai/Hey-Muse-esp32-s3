@@ -69,14 +69,28 @@ microphone and detector active and uses more battery than button-only sleep. See
 
 The firmware build can contain the SDK token from `sdkconfig`. Do not publish a
 `.bin` built with your personal token. Keep the token in the ignored local
-build configuration and have each user build with their own token.
+build configuration and have each user build with their own token. The same
+rule applies to the optional Fish Audio key below.
 
 ## Add spoken replies
 
 All spoken replies use Fish Audio's S2.1 Pro Free TTS API. Muse's reply text is
 sent to Fish over HTTPS; microphone audio is not sent to Fish. The API key is
-saved on the device after flashing and is not compiled into the firmware. The
-default voice is [this Fish Audio voice](https://fish.audio/app/m/1df12c4bb692423283fde2bdc7f84093).
+saved on the device after flashing by default. You can choose the voice from
+the three slots configured in menuconfig: Muse, Ethan, and Sarah. Slot 1 defaults
+to [Muse](https://fish.audio/app/m/1df12c4bb692423283fde2bdc7f84093); slots 2
+and 3 default to the Ethan and Sarah voice IDs supplied for this project.
+
+To configure voice slots, run this from `esp32/`:
+
+```sh
+idf.py -B build-muse-waveshare-s3-175c menuconfig
+```
+
+Open **ESP32 Device SDK → Hey Muse Fish Audio**. Set a name and Fish Audio
+model ID for each slot you want to use, then save `sdkconfig`, rebuild, and
+flash. Phone Setup will then let you choose among those configured voices.
+Fish Audio uses the model ID as the request's `reference_id`.
 
 Create a Fish Audio API key at <https://fish.audio/app/api-keys>. With the
 1.75C connected by USB, run this from `esp32/` in an ESP-IDF terminal:
@@ -87,10 +101,14 @@ python tools/muse/save_fish_api_key.py
 
 The helper finds the connected board and asks for the key with hidden input.
 It sends the key over USB, prints only the save result, and stores it in
-encrypted device NVS. Check **Settings > Voice replies** for
+device NVS. This firmware does not encrypt the NVS partition at rest. Check
+**Settings > Voice replies** for
 `Fish Audio API key saved`. You can also enter the key on the Bluetooth setup
-page. Free-tier availability and fair-use limits follow Fish Audio's current
-terms.
+page. Alternatively, set **Fish Audio API key (local builds only)** in the
+menuconfig page above. That embeds the key in the firmware; anyone who receives
+the binary can extract and use it. Keep `sdkconfig` and binaries with personal
+keys private. Free-tier availability and fair-use limits follow Fish Audio's
+current terms.
 
 ## License
 

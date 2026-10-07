@@ -81,28 +81,58 @@ static int build_status(char *out, size_t len)
     muse_hatch_status(&h);
     muse_power_t p = muse_state_power();
     char host[MUSE_HOST_MAX + 1], vm[MUSE_VM_MAX + 1];
+    char fish_voice_id[MUSE_FISH_VOICE_ID_MAX + 1];
+    const char *voice_names[] = {
+        CONFIG_MUSE_FISH_VOICE_1_NAME, CONFIG_MUSE_FISH_VOICE_2_NAME, CONFIG_MUSE_FISH_VOICE_3_NAME,
+    };
+    const char *voice_ids[] = {
+        CONFIG_MUSE_FISH_VOICE_1_ID, CONFIG_MUSE_FISH_VOICE_2_ID, CONFIG_MUSE_FISH_VOICE_3_ID,
+    };
     muse_settings_hatch_host(host);
     muse_settings_hatch_vm(vm);
+    muse_settings_fish_voice_id(fish_voice_id);
 
-    char ssid_e[2 * MUSE_SSID_MAX + 1], host_e[2 * MUSE_HOST_MAX + 1], vm_e[2 * MUSE_VM_MAX + 1], last_e[128];
+    char ssid_e[2 * MUSE_SSID_MAX + 1], host_e[2 * MUSE_HOST_MAX + 1], vm_e[2 * MUSE_VM_MAX + 1];
+    char fish_voice_e[2 * MUSE_FISH_VOICE_ID_MAX + 1], last_e[128];
     json_str(ssid_e, sizeof(ssid_e), w.ssid);
     json_str(host_e, sizeof(host_e), host);
     json_str(vm_e, sizeof(vm_e), vm);
+    json_str(fish_voice_e, sizeof(fish_voice_e), fish_voice_id);
     json_str(last_e, sizeof(last_e), s_last);
+
+    char voices_json[768] = "[";
+    size_t voices_used = 1;
+    for (size_t i = 0; i < 3; i++) {
+        if (!voice_ids[i][0] || strnlen(voice_ids[i], MUSE_FISH_VOICE_ID_MAX + 1) > MUSE_FISH_VOICE_ID_MAX) {
+            continue;
+        }
+        char name_e[96], id_e[2 * MUSE_FISH_VOICE_ID_MAX + 1], item[256];
+        json_str(name_e, sizeof(name_e), voice_names[i]);
+        json_str(id_e, sizeof(id_e), voice_ids[i]);
+        int item_len = snprintf(item, sizeof(item), "%s{\"name\":\"%s\",\"id\":\"%s\"}",
+                                voices_used > 1 ? "," : "", name_e, id_e);
+        if (item_len > 0 && (size_t)item_len < sizeof(item) && voices_used + (size_t)item_len + 2 < sizeof(voices_json)) {
+            memcpy(voices_json + voices_used, item, (size_t)item_len);
+            voices_used += (size_t)item_len;
+        }
+    }
+    voices_json[voices_used++] = ']';
+    voices_json[voices_used] = '\0';
 
     return snprintf(out, len,
                     "{\"name\":\"%s\",\"fw\":\"%s\",\"battery\":%d,"
                     "\"wifi\":{\"on\":%s,\"state\":\"%s\",\"ssid\":\"%s\",\"ip\":\"%s\",\"rssi\":%d},"
                     "\"hatch\":{\"host\":\"%s\",\"vm\":\"%s\",\"token\":%s,\"state\":\"%s\"},"
                     "\"link\":{\"paired\":%s,\"state\":\"%s\"},"
-                    "\"volume\":%d,\"speaker\":%s,\"mic_gain\":%d,\"brightness\":%d,\"sleep\":%d,\"last\":\"%s\"}",
+                    "\"volume\":%d,\"speaker\":%s,\"mic_gain\":%d,\"brightness\":%d,\"sleep\":%d,"
+                    "\"fish_voice_id\":\"%s\",\"fish_voices\":%s,\"last\":\"%s\"}",
                     s_name, esp_app_get_description()->version, p.battery_pct,
                     muse_settings_wifi_on() ? "true" : "false", wifi_state_name(w.state), ssid_e, w.ip, w.rssi,
                     host_e, vm_e, muse_settings_hatch_token_len() ? "true" : "false", muse_hatch_state_name(h.state),
                     muse_link_hatch_linked() ? "true" : "false", muse_link_state_name(muse_link_state()),
                     muse_settings_volume(), muse_settings_speaker_on() ? "true" : "false",
                     muse_settings_mic_gain(), muse_settings_brightness(),
-                    muse_settings_sleep_s(), last_e);
+                    muse_settings_sleep_s(), fish_voice_e, voices_json, last_e);
 }
 
 static bool parse_int(const char *v, int lo, int hi, int *out)
@@ -169,6 +199,10 @@ static void run_command(char *cmd)
         if (muse_settings_set_fish_api_key(v, cmd[8] == '+') != ESP_OK) {
             res = "error: Fish Audio API key too long";
         }
+    } else if (!strcmp(cmd, "fish.voice")) {
+        if (muse_settings_set_fish_voice_id(v) != ESP_OK) {
+            res = "error: invalid Fish voice ID (use 1-64 letters, numbers, _ or -)";
+        }
     } else if (!strcmp(cmd, "hatch.test")) {
         muse_hatch_test();
     } else if (!strcmp(cmd, "test.loopback")) {
@@ -190,8 +224,8 @@ static void run_command(char *cmd)
     /* Never echo secrets back. */
     bool secret = !strcmp(cmd, "wifi.pass") || !strncmp(cmd, "hatch.token", 11) ||
                   !strncmp(cmd, "gemini.key", 10) || !strncmp(cmd, "hf.token", 8) ||
-                  !strncmp(cmd, "fish.key", 8);
-    snprintf(s_last, sizeof(s_last), "%s: %s", cmd, res);
+                  !strncmp(cmd, "fish.key", 8) || !strcmp(cmd, "fish.voice");
+    snprintf(s_last, sizeof(s_last), "%.*s: %.*s", 16, cmd, 42, res);
     ESP_LOGI(TAG, "cmd %s%s%s -> %s", cmd, secret ? "" : "=", secret ? "" : v, res);
     muse_state_poke();
 
@@ -226,7 +260,7 @@ static int on_access(uint16_t conn, uint16_t attr, struct ble_gatt_access_ctxt *
     (void)attr;
     (void)arg;
     if (ctxt->op == BLE_GATT_ACCESS_OP_READ_CHR) {
-        char buf[512];
+        char buf[1536];
         int n = build_status(buf, sizeof(buf));
         n = n < (int)sizeof(buf) ? n : (int)sizeof(buf) - 1;
         return os_mbuf_append(ctxt->om, buf, n) == 0 ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;

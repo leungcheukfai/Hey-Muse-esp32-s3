@@ -32,7 +32,6 @@ static const char *TAG = "muse_fish_tts";
 
 #define FISH_TTS_URL "https://api.fish.audio/v1/tts"
 #define FISH_TTS_MODEL "s2.1-pro-free"
-#define FISH_TTS_REFERENCE_ID "1df12c4bb692423283fde2bdc7f84093"
 #define FISH_TTS_RATE 16000
 #define FISH_AUDIO_MAX (8 * 1024 * 1024)
 #define PCM_BATCH_FRAMES 1024
@@ -85,11 +84,11 @@ static esp_err_t feed_pcm(pcm_stream_t *stream, const uint8_t *data, size_t len)
     return ESP_OK;
 }
 
-static char *request_json(const char *text)
+static char *request_json(const char *voice_id, const char *text)
 {
     cJSON *root = cJSON_CreateObject();
     if (!root || !cJSON_AddStringToObject(root, "text", text) ||
-        !cJSON_AddStringToObject(root, "reference_id", FISH_TTS_REFERENCE_ID) ||
+        !cJSON_AddStringToObject(root, "reference_id", voice_id) ||
         !cJSON_AddStringToObject(root, "format", "pcm") ||
         !cJSON_AddNumberToObject(root, "sample_rate", FISH_TTS_RATE)) {
         cJSON_Delete(root);
@@ -126,13 +125,14 @@ static esp_err_t write_all(esp_http_client_handle_t client, const char *data, si
     return ESP_OK;
 }
 
-esp_err_t muse_fish_tts_generate(const char *api_key, const char *text, muse_fish_pcm_cb_t cb, void *context)
+esp_err_t muse_fish_tts_generate(const char *api_key, const char *voice_id, const char *text,
+                                 muse_fish_pcm_cb_t cb, void *context)
 {
-    if (!api_key || !api_key[0] || !text || !text[0] || !cb) {
+    if (!api_key || !api_key[0] || !voice_id || !voice_id[0] || !text || !text[0] || !cb) {
         return ESP_ERR_INVALID_ARG;
     }
 
-    char *json = request_json(text);
+    char *json = request_json(voice_id, text);
     if (!json) {
         return ESP_ERR_NO_MEM;
     }

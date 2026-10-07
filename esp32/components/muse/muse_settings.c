@@ -47,6 +47,7 @@ static struct {
     char gemini_key[MUSE_GEMINI_KEY_MAX + 1];
     char hf_token[MUSE_HF_TOKEN_MAX + 1];
     char fish_api_key[MUSE_FISH_API_KEY_MAX + 1];
+    char fish_voice_id[MUSE_FISH_VOICE_ID_MAX + 1];
 } s = {
     .volume = CONFIG_MUSE_DEFAULT_VOLUME,
     .speaker_on = true,
@@ -55,6 +56,7 @@ static struct {
     .sleep_s = 120,
     .wifi_on = true,
     .host = DEFAULT_HOST,
+    .fish_voice_id = MUSE_FISH_DEFAULT_VOICE_ID,
 };
 
 static SemaphoreHandle_t s_lock;
@@ -137,7 +139,26 @@ esp_err_t muse_settings_init(void)
     load_str("token", s.token, sizeof(s.token));
     load_str("gemini_key", s.gemini_key, sizeof(s.gemini_key));
     load_str("hf_token", s.hf_token, sizeof(s.hf_token));
-    load_str("fish_key", s.fish_api_key, sizeof(s.fish_api_key));
+    /* An explicitly saved (even empty) NVS value overrides the build-time
+     * key, so Phone Setup's Clear key works for personal firmware too. */
+    size_t fish_key_len = sizeof(s.fish_api_key);
+    if (nvs_get_str(s_nvs, "fish_key", s.fish_api_key, &fish_key_len) == ESP_ERR_NVS_NOT_FOUND) {
+#ifdef CONFIG_MUSE_FISH_API_KEY
+        if (CONFIG_MUSE_FISH_API_KEY[0]) {
+            size_t configured_key_len = strlen(CONFIG_MUSE_FISH_API_KEY);
+            if (configured_key_len <= MUSE_FISH_API_KEY_MAX) {
+                strlcpy(s.fish_api_key, CONFIG_MUSE_FISH_API_KEY, sizeof(s.fish_api_key));
+            } else {
+                ESP_LOGW(TAG, "configured Fish Audio API key exceeds %d characters; ignoring it",
+                         MUSE_FISH_API_KEY_MAX);
+            }
+        }
+#endif
+    }
+    load_str("fish_voice", s.fish_voice_id, sizeof(s.fish_voice_id));
+    if (!s.fish_voice_id[0]) {
+        strlcpy(s.fish_voice_id, MUSE_FISH_DEFAULT_VOICE_ID, sizeof(s.fish_voice_id));
+    }
     s.volume = clampi(s.volume, 0, 100);
     s.mic_gain = clampi(s.mic_gain, 0, MUSE_MIC_GAIN_MAX);
     s.brightness = clampi(s.brightness, 10, 100);
@@ -230,6 +251,11 @@ size_t muse_settings_fish_api_key_len(void)
     size_t n;
     LOCKED(n = strlen(s.fish_api_key));
     return n;
+}
+
+void muse_settings_fish_voice_id(char out[MUSE_FISH_VOICE_ID_MAX + 1])
+{
+    LOCKED(strlcpy(out, s.fish_voice_id, MUSE_FISH_VOICE_ID_MAX + 1));
 }
 
 void muse_settings_set_volume(int pct)
@@ -404,4 +430,31 @@ esp_err_t muse_settings_set_fish_api_key(const char *key, bool append)
         notify(MUSE_SETTING_FISH_AUDIO);
     }
     return err;
+}
+
+esp_err_t muse_settings_set_fish_voice_id(const char *voice_id)
+{
+    if (!voice_id) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    const char *value = voice_id[0] ? voice_id : MUSE_FISH_DEFAULT_VOICE_ID;
+    size_t len = strnlen(value, MUSE_FISH_VOICE_ID_MAX + 1);
+    if (!len || len > MUSE_FISH_VOICE_ID_MAX) {
+        return ESP_ERR_INVALID_SIZE;
+    }
+    for (size_t i = 0; i < len; i++) {
+        char c = value[i];
+        if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+              (c >= '0' && c <= '9') || c == '_' || c == '-')) {
+            return ESP_ERR_INVALID_ARG;
+        }
+    }
+
+    LOCKED({
+        strlcpy(s.fish_voice_id, value, sizeof(s.fish_voice_id));
+        save_str("fish_voice", s.fish_voice_id);
+    });
+    notify(MUSE_SETTING_FISH_VOICE);
+    return ESP_OK;
 }

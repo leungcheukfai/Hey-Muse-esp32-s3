@@ -26,4 +26,5 @@ typedef bool (*muse_fish_pcm_cb_t)(const int16_t *pcm, size_t frames, void *cont
 
 /* Requests Fish Audio S2.1 Pro Free and streams 16 kHz mono PCM to cb.
  * The caller owns and must clear api_key after this call. */
-esp_err_t muse_fish_tts_generate(const char *api_key, const char *text, muse_fish_pcm_cb_t cb, void *context);
+esp_err_t muse_fish_tts_generate(const char *api_key, const char *voice_id, const char *text,
+                                 muse_fish_pcm_cb_t cb, void *context);
