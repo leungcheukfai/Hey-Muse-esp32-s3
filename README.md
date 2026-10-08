@@ -110,7 +110,8 @@ microphone and detector active and uses more battery than button-only sleep. See
 The firmware build can contain the SDK token from `sdkconfig`. Do not publish a
 `.bin` built with your personal token. Keep the token in the ignored local
 build configuration and have each user build with their own token. The same
-rule applies to the optional Fish Audio key below.
+rule applies to the optional Fish Audio key below. Device logs report only
+whether the Muse token is configured; they must never print any part of it.
 
 ## Add spoken replies
 

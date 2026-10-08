@@ -65,7 +65,9 @@ menu "ESP32 Device SDK"
             Your mgst_ SDK token from gadgets.muse.ai (Account > SDK tokens).
             Every gadget needs one to pair. The device hands it to the Muse
             app inside the encrypted pairing session and includes it when it
-            refreshes its device token.
+            refreshes its device token. This value is compiled into the
+            firmware binary; anyone with the binary can extract it. Do not
+            distribute firmware built with your personal token.
 
     config HOMEHUB_WIFI_SSID
         string "WiFi SSID override (dev iteration)"
