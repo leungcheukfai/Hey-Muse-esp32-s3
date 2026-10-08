@@ -20,18 +20,21 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 FISH_TTS_C = ROOT / "components" / "muse" / "muse_fish_tts.c"
-VOICE_ID = "1df12c4bb692423283fde2bdc7f84093"
 
 
 class MuseFishVoiceTest(unittest.TestCase):
-    def test_tts_request_selects_the_requested_voice_reference(self) -> None:
+    def test_tts_request_uses_the_selected_voice_reference(self) -> None:
         source = FISH_TTS_C.read_text()
 
-        self.assertIn(f'#define FISH_TTS_REFERENCE_ID "{VOICE_ID}"', source)
         self.assertIn(
-            'cJSON_AddStringToObject(root, "reference_id", FISH_TTS_REFERENCE_ID)',
+            'static char *request_json(const char *voice_id, const char *text)',
             source,
         )
+        self.assertIn(
+            'cJSON_AddStringToObject(root, "reference_id", voice_id)',
+            source,
+        )
+        self.assertIn('char *json = request_json(voice_id, text);', source)
 
 
 if __name__ == "__main__":

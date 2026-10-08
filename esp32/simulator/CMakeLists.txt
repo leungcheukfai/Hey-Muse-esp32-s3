@@ -154,6 +154,8 @@ add_executable(muse_simulator
     "${MUSE_COMPONENT_DIR}/muse_ui.c"
     "${MUSE_COMPONENT_DIR}/muse_state.c"
     "${MUSE_COMPONENT_DIR}/muse_text.c"
+    "${MUSE_COMPONENT_DIR}/muse_font.c"
+    "${MUSE_COMPONENT_DIR}/muse_lang.c"
     "${MUSE_COMPONENT_DIR}/../../avatar/muse_pixel.c"
 )
 

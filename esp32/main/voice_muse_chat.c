@@ -31,6 +31,8 @@
 #include "wifi_mgr.h"
 
 #include "muse_link.h"
+#include "muse_fish_tts.h"
+#include "muse_lang.h"
 #include "muse_settings.h"
 #include "muse_state.h"
 #include "muse_wifi.h"
@@ -97,3 +99,41 @@ void muse_state_page(bool cjk, int *cols, int *lines) {
     *cols = 16;
     *lines = 2;
 }
+
+/* The Voice PE shares the chat session but not Muse's settings UI or NVS
+ * settings component. Keep its English prompt and no-key TTS fallback local
+ * to this adapter; full Muse builds use muse_lang.c and muse_settings.c. */
+#if !CONFIG_MUSE_ENABLED
+const char *muse_lang_chat_instruction(void)
+{
+    return "Reply in clear, natural English. Keep names and technical terms clear.";
+}
+
+void muse_settings_fish_api_key(char out[MUSE_FISH_API_KEY_MAX + 1])
+{
+    out[0] = '\0';
+}
+
+size_t muse_settings_fish_api_key_len(void)
+{
+    return 0;
+}
+
+void muse_settings_fish_voice_id(char out[MUSE_FISH_VOICE_ID_MAX + 1])
+{
+    strlcpy(out, MUSE_FISH_DEFAULT_VOICE_ID, MUSE_FISH_VOICE_ID_MAX + 1);
+}
+#endif
+
+#if !CONFIG_MUSE_HATCH
+esp_err_t muse_fish_tts_generate(const char *api_key, const char *voice_id, const char *text,
+                                 muse_fish_pcm_cb_t cb, void *context)
+{
+    (void)api_key;
+    (void)voice_id;
+    (void)text;
+    (void)cb;
+    (void)context;
+    return ESP_ERR_NOT_SUPPORTED;
+}
+#endif
